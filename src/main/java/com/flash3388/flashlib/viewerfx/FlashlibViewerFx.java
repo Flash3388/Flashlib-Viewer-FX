@@ -95,11 +95,6 @@ public class FlashlibViewerFx {
     }
 
     private void loadNatives() throws CodeLoadException {
-        try {
-            Natives.Loader loader = Natives.newLoader();
-            loader.load("modbus_jni");
-        } catch (FindException | IOException e) {
-            throw new CodeLoadException(e);
-        }
+
     }
 }

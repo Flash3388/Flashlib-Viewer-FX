@@ -36,7 +36,7 @@ public class Main {
     }
 
     private static ProgramOptions handleArguments(String[] args) throws ArgumentParserException {
-        ArgumentParser parser = ArgumentParsers.newFor("ModbusFx")
+        ArgumentParser parser = ArgumentParsers.newFor("FlashlibViewerFx")
                 .build()
                 .defaultHelp(true)
                 .description("");
