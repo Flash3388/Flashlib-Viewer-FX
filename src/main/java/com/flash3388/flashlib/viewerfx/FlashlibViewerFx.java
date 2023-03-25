@@ -26,8 +26,8 @@ public class FlashlibViewerFx {
 
     private static final boolean FORCE_FULL_SCREEN = false;
 
-    private static final double WINDOW_WIDTH = 800;
-    private static final double WINDOW_HEIGHT = 550;
+    private static final double WINDOW_WIDTH = 850;
+    private static final double WINDOW_HEIGHT = 650;
 
     private final ProgramOptions mProgramOptions;
     private final ScheduledExecutorService mExecutorService;

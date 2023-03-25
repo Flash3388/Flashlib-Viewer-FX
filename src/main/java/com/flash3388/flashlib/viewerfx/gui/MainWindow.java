@@ -3,7 +3,7 @@ package com.flash3388.flashlib.viewerfx.gui;
 import com.castle.exceptions.ServiceException;
 import com.flash3388.flashlib.viewerfx.FlashLibServices;
 import com.flash3388.flashlib.viewerfx.gui.views.AbstractView;
-import com.flash3388.flashlib.viewerfx.gui.views.InstancesView;
+import com.flash3388.flashlib.viewerfx.gui.views.RobotControlView;
 import com.flash3388.flashlib.viewerfx.gui.views.JoystickView;
 import com.flash3388.flashlib.viewerfx.gui.views.ObsrView;
 import javafx.application.Platform;
@@ -25,7 +25,7 @@ public class MainWindow implements AutoCloseable {
     private final BorderPane mRoot;
 
     private final ObsrView mObsrView;
-    private final InstancesView mInstancesView;
+    private final RobotControlView mRobotControlView;
     private final JoystickView mJoystickView;
 
     private final AtomicReference<AbstractView> mSelectedView;
@@ -37,7 +37,7 @@ public class MainWindow implements AutoCloseable {
         mRoot = new BorderPane();
 
         mObsrView = new ObsrView(services);
-        mInstancesView = new InstancesView(services);
+        mRobotControlView = new RobotControlView(services);
         mJoystickView = new JoystickView(services);
 
         mSelectedView = new AtomicReference<>();
@@ -48,8 +48,8 @@ public class MainWindow implements AutoCloseable {
         obsrTab.setContent(mObsrView);
         obsrTab.setClosable(false);
 
-        Tab instancesTab = new Tab("Instances");
-        instancesTab.setContent(mInstancesView);
+        Tab instancesTab = new Tab("Robot Control");
+        instancesTab.setContent(mRobotControlView);
         instancesTab.setClosable(false);
 
         Tab joysticksTab = new Tab("Joystick");

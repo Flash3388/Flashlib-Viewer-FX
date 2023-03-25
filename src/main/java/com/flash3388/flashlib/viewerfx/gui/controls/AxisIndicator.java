@@ -25,7 +25,7 @@ public class AxisIndicator extends Pane {
         mValueLbl = new Label("0.000");
 
         HBox lblBox = new HBox();
-        lblBox.setSpacing(2);
+        lblBox.setSpacing(5);
         lblBox.getChildren().addAll(new Label(name), mValueLbl);
 
         VBox box = new VBox();

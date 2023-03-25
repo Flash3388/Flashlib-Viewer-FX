@@ -30,10 +30,10 @@ public class JoystickView extends AbstractView {
         mHidService.start();
 
         VBox pane = new VBox();
-        pane.setSpacing(15);
+        pane.setSpacing(20);
         pane.setPadding(new Insets(5));
         mNodes = new JoystickNode[RawHidData.MAX_HID];
-        for (int i = 0; i < RawHidData.MAX_HID; i++) {
+        for (int i = 0; i < mNodes.length; i++) {
             mNodes[i] = new JoystickNode(i);
             pane.getChildren().add(mNodes[i]);
         }
@@ -73,8 +73,8 @@ public class JoystickView extends AbstractView {
             mPovs = new CircularDirectionIndicator[RawHidData.MAX_POVS];
 
             FlowPane axesPane = new FlowPane();
-            axesPane.setHgap(2);
-            axesPane.setVgap(2);
+            axesPane.setHgap(5);
+            axesPane.setVgap(5);
             for (int i = 0; i < mAxes.length; i++) {
                 mAxes[i] = new AxisIndicator(String.valueOf(i), 100, 50);
                 axesPane.getChildren().add(mAxes[i]);
@@ -84,7 +84,7 @@ public class JoystickView extends AbstractView {
             buttonsPane.setHgap(2);
             buttonsPane.setVgap(2);
             for (int i = 0; i < mButtons.length; i++) {
-                mButtons[i] = new BooleanIndicator(String.valueOf(i+1), 20, 20);
+                mButtons[i] = new BooleanIndicator(String.valueOf(i+1), 20, 10);
                 buttonsPane.getChildren().add(mButtons[i]);
             }
 
@@ -96,9 +96,13 @@ public class JoystickView extends AbstractView {
                 povsPane.getChildren().add(mPovs[i]);
             }
 
+            VBox buttonsAndPovs = new VBox();
+            buttonsAndPovs.getChildren().addAll(buttonsPane, povsPane);
+            buttonsAndPovs.setSpacing(5);
+
             HBox box = new HBox();
             box.setSpacing(2);
-            box.getChildren().addAll(axesPane, buttonsPane, povsPane);
+            box.getChildren().addAll(axesPane, buttonsAndPovs);
 
             getChildren().add(box);
         }
