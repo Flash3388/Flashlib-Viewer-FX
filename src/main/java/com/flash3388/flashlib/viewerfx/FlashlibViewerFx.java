@@ -1,23 +1,28 @@
 package com.flash3388.flashlib.viewerfx;
 
-import com.castle.code.Natives;
 import com.castle.exceptions.CodeLoadException;
-import com.castle.exceptions.FindException;
+import com.castle.exceptions.ServiceException;
 import com.castle.util.closeables.Closeables;
-import javafx.application.Platform;
-import javafx.stage.Stage;
+import com.flash3388.flashlib.time.Clock;
+import com.flash3388.flashlib.time.SystemMillisClock;
+import com.flash3388.flashlib.util.logging.Logging;
+import com.flash3388.flashlib.util.unique.InstanceId;
+import com.flash3388.flashlib.util.unique.InstanceIdGenerator;
 import com.flash3388.flashlib.viewerfx.gui.ApplicationGui;
 import com.flash3388.flashlib.viewerfx.gui.Dialogs;
 import com.flash3388.flashlib.viewerfx.gui.MainWindow;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class FlashlibViewerFx {
+
+    private static final Logger LOGGER = Logging.getLogger("Viewer");
 
     private static final boolean FORCE_FULL_SCREEN = false;
 
@@ -26,21 +31,26 @@ public class FlashlibViewerFx {
 
     private final ProgramOptions mProgramOptions;
     private final ScheduledExecutorService mExecutorService;
-    private final Logger mLogger;
+    private final FlashLibServices mServices;
 
     private final AtomicReference<MainWindow> mMainWindow;
 
-    public FlashlibViewerFx(ProgramOptions programOptions, ScheduledExecutorService executorService, Logger logger) {
+    public FlashlibViewerFx(ProgramOptions programOptions,
+                            ScheduledExecutorService executorService) {
         mProgramOptions = programOptions;
         mExecutorService = executorService;
-        mLogger = logger;
+
+        InstanceId instanceId = InstanceIdGenerator.generate();
+        Clock clock = new SystemMillisClock();
+
+        mServices = new FlashLibServices(instanceId, clock);
         mMainWindow = new AtomicReference<>();
     }
 
     public void run() throws InitializationException {
-        mLogger.info("Starting GUI");
+        LOGGER.info("Starting GUI");
         Stage primaryStage = ApplicationGui.startGui(mExecutorService);
-        mLogger.info("GUI launched");
+        LOGGER.info("GUI launched");
 
         showMainWindow(primaryStage);
     }
@@ -50,7 +60,15 @@ public class FlashlibViewerFx {
             CountDownLatch runLatch = new CountDownLatch(1);
 
             Platform.runLater(()-> {
-                final MainWindow mainWindow = new MainWindow(primaryStage, WINDOW_WIDTH, WINDOW_HEIGHT);
+                final MainWindow mainWindow;
+                try {
+                    mainWindow = new MainWindow(primaryStage, WINDOW_WIDTH, WINDOW_HEIGHT, mServices);
+                } catch (ServiceException e) {
+                    Dialogs.showError("Error", "Failed loading window", e);
+                    primaryStage.close();
+                    runLatch.countDown();
+                    return;
+                }
                 mMainWindow.set(mainWindow);
 
                 primaryStage.setScene(mainWindow.createScene());
@@ -79,10 +97,20 @@ public class FlashlibViewerFx {
                     return;
                 }
 
+                try {
+                    mServices.startAll();
+                } catch (Throwable t) {
+                    Dialogs.showError("Error", "Failed loading services", t);
+                    primaryStage.close();
+                    Closeables.silentClose(mainWindow);
+                    runLatch.countDown();
+                    return;
+                }
+
                 mExecutorService.scheduleAtFixedRate(
-                        mainWindow::updateClients,
+                        mainWindow::updateView,
                         100,
-                        1000,
+                        100,
                         TimeUnit.MILLISECONDS
                 );
             });
@@ -91,6 +119,8 @@ public class FlashlibViewerFx {
         } catch (Exception e) {
             Platform.exit();
             throw new InitializationException(e);
+        } finally {
+            mServices.stopAll();
         }
     }
 
