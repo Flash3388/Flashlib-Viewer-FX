@@ -6,6 +6,7 @@ import com.flash3388.flashlib.net.obsr.Value;
 import com.flash3388.flashlib.net.obsr.ValueType;
 import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -20,24 +21,45 @@ public class ObsrEntryControl extends BorderPane {
     private ValueType mLastSeenType;
 
     private final HBox mValueDisplayPane;
+    private final ComboBox<ValueType> mValueTypeSelector;
+    private final AtomicBoolean mIgnoreIncoming;
     private ValueDisplay mCurrentValueDisplay;
 
     public ObsrEntryControl(String name, StoredEntry entry) {
+        mEntry = entry;
+        mIgnoreIncoming = new AtomicBoolean(false);
+
         HBox top = new HBox();
         top.getChildren().add(new Label(name));
         top.setAlignment(Pos.CENTER);
         setTop(top);
+
+        mValueTypeSelector = new ComboBox<>();
+        mValueTypeSelector.getItems().addAll(ValueType.values());
+        mValueTypeSelector.getSelectionModel().selectedItemProperty().addListener((obs, o, n)-> {
+            if (mLastSeenType == n) {
+                return;
+            }
+
+            mIgnoreIncoming.set(true);
+            resetValue(n);
+            mIgnoreIncoming.set(false);
+        });
+        setLeft(mValueTypeSelector);
 
         mValueDisplayPane = new HBox();
         mValueDisplayPane.setAlignment(Pos.CENTER);
         setCenter(mValueDisplayPane);
         mCurrentValueDisplay = null;
 
-        mEntry = entry;
         changeDisplay(ValueType.EMPTY);
     }
 
     public void updateValue() {
+        if (mIgnoreIncoming.get()) {
+            return;
+        }
+
         Value value = mEntry.getValue();
         if (value.getType() != mLastSeenType) {
             changeDisplay(value.getType());
@@ -92,6 +114,38 @@ public class ObsrEntryControl extends BorderPane {
         mValueDisplayPane.getChildren().clear();
         mValueDisplayPane.getChildren().add(mCurrentValueDisplay);
         mLastSeenType = type;
+        mValueTypeSelector.getSelectionModel().select(type);
+    }
+
+    private void resetValue(ValueType type) {
+        close();
+        mEntry.clearValue();
+
+        switch (type) {
+            case STRING:
+                mEntry.setString("");
+                break;
+            case BOOLEAN:
+                mEntry.setBoolean(false);
+                break;
+            case INT:
+                mEntry.setInt(0);
+                break;
+            case LONG:
+                mEntry.valueProperty().set(new Value(type, 0L));
+                break;
+            case DOUBLE:
+                mEntry.setDouble(0);
+                break;
+            case RAW:
+                mEntry.setRaw(new byte[0]);
+                break;
+            case EMPTY:
+                mEntry.clearValue();
+                break;
+        }
+
+        changeDisplay(type);
     }
 
     private static abstract class ValueDisplay extends Pane implements AutoCloseable {
@@ -138,7 +192,7 @@ public class ObsrEntryControl extends BorderPane {
         private StringValueDisplay(StoredEntry entry) {
             super(entry, ValueType.STRING);
 
-            mField = new TextField();
+            mField = new TextField(entry.getString(""));
             mField.textProperty().addListener((obs, o, n)-> {
                 updateValueInEntry(new Value(ValueType.STRING, n));
             });
@@ -166,6 +220,19 @@ public class ObsrEntryControl extends BorderPane {
             mField.valueProperty().addListener((obs, o, n)-> {
                 updateValueInEntry(new Value(valueType, n));
             });
+
+            switch (valueType) {
+                case INT:
+                    mField.valueProperty().setValue(entry.getInt(0));
+                    break;
+                case LONG:
+                    mField.valueProperty().setValue(entry.getValue().getLong(0));
+                    break;
+                case DOUBLE:
+                    mField.valueProperty().setValue(entry.getDouble(0));
+                    break;
+            }
+            mField.setText(String.valueOf(mField.valueProperty().getValue()));
 
             getChildren().add(mField);
         }
@@ -202,6 +269,7 @@ public class ObsrEntryControl extends BorderPane {
             mField.selectedProperty().addListener((obs, o, n)-> {
                 updateValueInEntry(new Value(ValueType.BOOLEAN, n));
             });
+            mField.setSelected(entry.getBoolean(false));
 
             getChildren().add(mField);
         }
@@ -220,6 +288,7 @@ public class ObsrEntryControl extends BorderPane {
             super(entry, ValueType.RAW);
 
             mField = new TextField();
+            mField.setText(bytesToHex(entry.getRaw(null)));
             getChildren().add(mField);
         }
 
