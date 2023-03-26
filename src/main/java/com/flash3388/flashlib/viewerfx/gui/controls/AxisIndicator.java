@@ -15,7 +15,6 @@ public class AxisIndicator extends Pane {
         mSlider = new Slider();
         mSlider.setMin(-1);
         mSlider.setMax(1);
-        mSlider.setMinorTickCount(1000);
         mSlider.setMajorTickUnit(0.1);
         mSlider.setShowTickLabels(true);
         mSlider.setShowTickMarks(true);

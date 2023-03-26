@@ -9,9 +9,11 @@ import java.util.Optional;
 public class TargetPortPropertyItem implements PropertySheet.Item {
 
     private final IntegerProperty mProperty;
+    private final String mCategory;
 
-    public TargetPortPropertyItem(IntegerProperty property) {
+    public TargetPortPropertyItem(IntegerProperty property, String category) {
         mProperty = property;
+        mCategory = category;
     }
 
     @Override
@@ -21,7 +23,7 @@ public class TargetPortPropertyItem implements PropertySheet.Item {
 
     @Override
     public String getCategory() {
-        return "Target";
+        return mCategory;
     }
 
     @Override

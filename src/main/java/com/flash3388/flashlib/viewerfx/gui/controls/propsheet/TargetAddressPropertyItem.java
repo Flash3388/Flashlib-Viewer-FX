@@ -1,6 +1,5 @@
 package com.flash3388.flashlib.viewerfx.gui.controls.propsheet;
 
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import org.controlsfx.control.PropertySheet;
@@ -10,9 +9,11 @@ import java.util.Optional;
 public class TargetAddressPropertyItem implements PropertySheet.Item {
 
     private final StringProperty mProperty;
+    private final String mCategory;
 
-    public TargetAddressPropertyItem(StringProperty property) {
+    public TargetAddressPropertyItem(StringProperty property, String category) {
         mProperty = property;
+        mCategory = category;
     }
 
     @Override
@@ -22,7 +23,7 @@ public class TargetAddressPropertyItem implements PropertySheet.Item {
 
     @Override
     public String getCategory() {
-        return "Target";
+        return mCategory;
     }
 
     @Override

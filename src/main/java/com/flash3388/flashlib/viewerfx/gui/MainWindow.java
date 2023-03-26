@@ -1,7 +1,7 @@
 package com.flash3388.flashlib.viewerfx.gui;
 
 import com.castle.exceptions.ServiceException;
-import com.flash3388.flashlib.viewerfx.gui.views.config.ConfigView;
+import com.flash3388.flashlib.viewerfx.gui.views.ConfigView;
 import com.flash3388.flashlib.viewerfx.services.FlashLibServices;
 import com.flash3388.flashlib.viewerfx.gui.views.AbstractView;
 import com.flash3388.flashlib.viewerfx.gui.views.RobotControlView;
