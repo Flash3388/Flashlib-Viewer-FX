@@ -12,6 +12,8 @@ import com.flash3388.flashlib.viewerfx.gui.controls.AxisIndicator;
 import com.flash3388.flashlib.viewerfx.gui.controls.BooleanIndicator;
 import com.flash3388.flashlib.viewerfx.gui.controls.CircularDirectionIndicator;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -46,10 +48,9 @@ public class JoystickView extends AbstractView {
         for (int i = 0; i < mNodes.length; i++) {
             if (mHidData.hasChannel(i)) {
                 mNodes[i].update(mHidData);
-                mNodes[i].setDisable(false);
+                mNodes[i].show();
             } else {
-                mNodes[i].reset();
-                mNodes[i].setDisable(true);
+                mNodes[i].hide();
             }
         }
     }
@@ -66,11 +67,14 @@ public class JoystickView extends AbstractView {
         private final BooleanIndicator[] mButtons;
         private final CircularDirectionIndicator[] mPovs;
 
+        private boolean mIsHidden;
+
         public JoystickNode(int hid) {
             mHid = hid;
             mAxes = new AxisIndicator[RawHidData.MAX_AXES];
             mButtons = new BooleanIndicator[RawHidData.MAX_BUTTONS];
             mPovs = new CircularDirectionIndicator[RawHidData.MAX_POVS];
+            mIsHidden = false;
 
             FlowPane axesPane = new FlowPane();
             axesPane.setHgap(5);
@@ -100,9 +104,12 @@ public class JoystickView extends AbstractView {
             buttonsAndPovs.getChildren().addAll(buttonsPane, povsPane);
             buttonsAndPovs.setSpacing(5);
 
+            Label nameLbl = new Label(String.valueOf(mHid));
+            nameLbl.setPadding(new Insets(5));
             HBox box = new HBox();
             box.setSpacing(2);
-            box.getChildren().addAll(axesPane, buttonsAndPovs);
+            box.setAlignment(Pos.CENTER);
+            box.getChildren().addAll(nameLbl, axesPane, buttonsAndPovs);
 
             getChildren().add(box);
         }
@@ -133,6 +140,27 @@ public class JoystickView extends AbstractView {
             for (int i = 0; i < mPovs.length; i++) {
                 mPovs[i].setValue(-1);
             }
+        }
+
+        public void show() {
+            if(!mIsHidden) {
+                return;
+            }
+
+            setDisable(false);
+            setVisible(true);
+            mIsHidden = false;
+        }
+
+        public void hide() {
+            if(mIsHidden) {
+                return;
+            }
+
+            reset();
+            setDisable(true);
+            setVisible(false);
+            mIsHidden = true;
         }
     }
 }
