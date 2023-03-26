@@ -17,6 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 public class JoystickView extends AbstractView {
@@ -67,6 +68,8 @@ public class JoystickView extends AbstractView {
         private final BooleanIndicator[] mButtons;
         private final CircularDirectionIndicator[] mPovs;
 
+        private final Pane mDataDisplayPane;
+        private final Label mNotConnectedLbl;
         private boolean mIsHidden;
 
         public JoystickNode(int hid) {
@@ -85,6 +88,7 @@ public class JoystickView extends AbstractView {
             }
 
             FlowPane buttonsPane = new FlowPane();
+            buttonsPane.setMaxWidth(280);
             buttonsPane.setHgap(2);
             buttonsPane.setVgap(2);
             for (int i = 0; i < mButtons.length; i++) {
@@ -106,10 +110,20 @@ public class JoystickView extends AbstractView {
 
             Label nameLbl = new Label(String.valueOf(mHid));
             nameLbl.setPadding(new Insets(5));
+            mNotConnectedLbl = new Label("Not Connected");
+            mNotConnectedLbl.setPadding(new Insets(5));
+            mNotConnectedLbl.setVisible(false);
+
+            HBox dataBox = new HBox();
+            dataBox.setSpacing(2);
+            dataBox.getChildren().addAll(axesPane, buttonsAndPovs);
+            dataBox.setAlignment(Pos.CENTER);
+            mDataDisplayPane = dataBox;
+
             HBox box = new HBox();
-            box.setSpacing(2);
+            box.setSpacing(5);
             box.setAlignment(Pos.CENTER);
-            box.getChildren().addAll(nameLbl, axesPane, buttonsAndPovs);
+            box.getChildren().addAll(nameLbl, mNotConnectedLbl, dataBox);
 
             getChildren().add(box);
         }
@@ -147,8 +161,9 @@ public class JoystickView extends AbstractView {
                 return;
             }
 
-            setDisable(false);
-            setVisible(true);
+            mDataDisplayPane.setDisable(false);
+            mDataDisplayPane.setVisible(true);
+            mNotConnectedLbl.setVisible(false);
             mIsHidden = false;
         }
 
@@ -158,8 +173,9 @@ public class JoystickView extends AbstractView {
             }
 
             reset();
-            setDisable(true);
-            setVisible(false);
+            mDataDisplayPane.setDisable(true);
+            mDataDisplayPane.setVisible(false);
+            mNotConnectedLbl.setVisible(true);
             mIsHidden = true;
         }
     }
