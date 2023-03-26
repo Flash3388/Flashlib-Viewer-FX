@@ -3,14 +3,15 @@ package com.flash3388.flashlib.viewerfx.gui.views;
 import com.castle.concurrent.service.TerminalService;
 import com.castle.exceptions.ServiceException;
 import com.flash3388.flashlib.hid.sdl2.hfcs.Sdl2HfcsHid;
+import com.flash3388.flashlib.net.hfcs.HfcsRegistry;
 import com.flash3388.flashlib.robot.hfcs.hid.HfcsHid;
 import com.flash3388.flashlib.robot.hfcs.hid.HidData;
 import com.flash3388.flashlib.robot.hfcs.hid.RawHidData;
 import com.flash3388.flashlib.time.Time;
-import com.flash3388.flashlib.viewerfx.FlashLibServices;
 import com.flash3388.flashlib.viewerfx.gui.controls.AxisIndicator;
 import com.flash3388.flashlib.viewerfx.gui.controls.BooleanIndicator;
 import com.flash3388.flashlib.viewerfx.gui.controls.CircularDirectionIndicator;
+import com.flash3388.flashlib.viewerfx.services.hfcs.HfcsService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -22,15 +23,15 @@ import javafx.scene.layout.VBox;
 
 public class JoystickView extends AbstractView {
 
-    private final TerminalService mHidService;
-    private final HidData mHidData;
+    private TerminalService mHidService;
+    private HidData mHidData;
 
     private final JoystickNode[] mNodes;
 
-    public JoystickView(FlashLibServices services) throws ServiceException {
-        mHidData = HfcsHid.createProvider(services.getHfcsService(), Time.seconds(1));
-        mHidService = Sdl2HfcsHid.initialize(mHidData);
-        mHidService.start();
+    public JoystickView(HfcsService hfcsService) {
+        hfcsService.serviceProperty().addListener((obs, o, n)-> {
+            refreshHidService(n);
+        });
 
         VBox pane = new VBox();
         pane.setSpacing(20);
@@ -45,7 +46,7 @@ public class JoystickView extends AbstractView {
     }
 
     @Override
-    public void updateView() {
+    public synchronized void updateView() {
         for (int i = 0; i < mNodes.length; i++) {
             if (mHidData.hasChannel(i)) {
                 mNodes[i].update(mHidData);
@@ -59,6 +60,20 @@ public class JoystickView extends AbstractView {
     @Override
     public void close() {
         mHidService.close();
+    }
+
+    private synchronized void refreshHidService(HfcsRegistry service) {
+        if (mHidService != null) {
+            mHidService.close();
+        }
+
+        mHidData = HfcsHid.createProvider(service, Time.seconds(1));
+        mHidService = Sdl2HfcsHid.initialize(mHidData);
+        try {
+            mHidService.start();
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static class JoystickNode extends AnchorPane {

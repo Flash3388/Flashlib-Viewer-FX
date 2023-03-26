@@ -1,7 +1,8 @@
 package com.flash3388.flashlib.viewerfx.gui;
 
 import com.castle.exceptions.ServiceException;
-import com.flash3388.flashlib.viewerfx.FlashLibServices;
+import com.flash3388.flashlib.viewerfx.gui.views.config.ConfigView;
+import com.flash3388.flashlib.viewerfx.services.FlashLibServices;
 import com.flash3388.flashlib.viewerfx.gui.views.AbstractView;
 import com.flash3388.flashlib.viewerfx.gui.views.RobotControlView;
 import com.flash3388.flashlib.viewerfx.gui.views.JoystickView;
@@ -27,6 +28,7 @@ public class MainWindow implements AutoCloseable {
     private final ObsrView mObsrView;
     private final RobotControlView mRobotControlView;
     private final JoystickView mJoystickView;
+    private final ConfigView mConfigView;
 
     private final AtomicReference<AbstractView> mSelectedView;
 
@@ -36,9 +38,10 @@ public class MainWindow implements AutoCloseable {
         mHeight = height;
         mRoot = new BorderPane();
 
-        mObsrView = new ObsrView(services);
-        mRobotControlView = new RobotControlView(services);
-        mJoystickView = new JoystickView(services);
+        mObsrView = new ObsrView(services.getObsrService());
+        mRobotControlView = new RobotControlView(services.getHfcsService(), services.getClock());
+        mJoystickView = new JoystickView(services.getHfcsService());
+        mConfigView = new ConfigView(services);
 
         mSelectedView = new AtomicReference<>();
     }
@@ -56,8 +59,12 @@ public class MainWindow implements AutoCloseable {
         joysticksTab.setContent(mJoystickView);
         joysticksTab.setClosable(false);
 
+        Tab configTab = new Tab("Config");
+        configTab.setContent(mConfigView);
+        configTab.setClosable(false);
+
         TabPane tabPane = new TabPane();
-        tabPane.getTabs().addAll(obsrTab, instancesTab, joysticksTab);
+        tabPane.getTabs().addAll(obsrTab, instancesTab, joysticksTab, configTab);
         tabPane.setSide(Side.LEFT);
         tabPane.getSelectionModel().selectedItemProperty().addListener((obs, o, n)-> {
             mSelectedView.set((AbstractView) n.getContent());

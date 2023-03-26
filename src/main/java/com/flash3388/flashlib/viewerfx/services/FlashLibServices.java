@@ -1,4 +1,4 @@
-package com.flash3388.flashlib.viewerfx;
+package com.flash3388.flashlib.viewerfx.services;
 
 import com.castle.exceptions.ServiceException;
 import com.castle.util.closeables.Closer;
@@ -10,6 +10,8 @@ import com.flash3388.flashlib.net.obsr.ObjectStorage;
 import com.flash3388.flashlib.net.obsr.impl.ObsrSecondaryNodeService;
 import com.flash3388.flashlib.time.Clock;
 import com.flash3388.flashlib.util.unique.InstanceId;
+import com.flash3388.flashlib.viewerfx.services.hfcs.HfcsService;
+import com.flash3388.flashlib.viewerfx.services.obsr.ObsrService;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -17,40 +19,38 @@ import java.util.Arrays;
 public class FlashLibServices {
 
     private final Clock mClock;
-    private final HfcsServiceBase mHfcsService;
-    private final ObsrSecondaryNodeService mObsrService;
+    private final HfcsService mHfcsService;
+    private final ObsrService mObsrService;
 
     public FlashLibServices(InstanceId instanceId, Clock clock) {
         mClock = clock;
-        mHfcsService = new HfcsTightService(
-                Arrays.asList(
-                        new InetSocketAddress("127.0.0.1", 5005)
-                ),
-                instanceId, clock,
-                5000);
-        mObsrService = new ObsrSecondaryNodeService(instanceId, "127.0.0.1", clock);
+        mHfcsService = new HfcsService(instanceId, clock);
+        mObsrService = new ObsrService(instanceId, clock);
     }
 
     public Clock getClock() {
         return mClock;
     }
 
-    public HfcsRegistry getHfcsService() {
+    public HfcsService getHfcsService() {
         return mHfcsService;
     }
 
-    public ObjectStorage getObsrService() {
+    public ObsrService getObsrService() {
         return mObsrService;
     }
 
-    public void startAll() throws ServiceException {
+    public void startAll() {
         mHfcsService.start();
         mObsrService.start();
     }
 
     public void stopAll() {
         try {
-            Closer.with(mHfcsService, mObsrService).close();
+            mHfcsService.stop();
+        } catch (Exception e) {}
+        try {
+            mObsrService.stop();
         } catch (Exception e) {}
     }
 }

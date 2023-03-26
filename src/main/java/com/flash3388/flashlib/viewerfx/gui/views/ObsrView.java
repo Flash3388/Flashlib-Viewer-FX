@@ -4,8 +4,8 @@ import com.flash3388.flashlib.net.obsr.ObjectStorage;
 import com.flash3388.flashlib.net.obsr.StoragePath;
 import com.flash3388.flashlib.net.obsr.StoredEntry;
 import com.flash3388.flashlib.net.obsr.StoredObject;
-import com.flash3388.flashlib.viewerfx.FlashLibServices;
 import com.flash3388.flashlib.viewerfx.gui.controls.ObsrEntryControl;
+import com.flash3388.flashlib.viewerfx.services.obsr.ObsrService;
 import javafx.application.Platform;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TreeItem;
@@ -18,11 +18,11 @@ import java.util.Map;
 public class ObsrView extends AbstractView {
 
     private final TreeView<NodeBase> mTreeView;
-    private final ObjectNode mRootItem;
+    private ObjectNode mRootItem;
 
     private ObsrEntryControl mEntryControl;
 
-    public ObsrView(FlashLibServices services) {
+    public ObsrView(ObsrService service) {
         mTreeView = new TreeView<>();
         mTreeView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         mTreeView.setEditable(false);
@@ -40,14 +40,9 @@ public class ObsrView extends AbstractView {
             setCenter(mEntryControl);
         });
 
-        ObjectStorage obsr = services.getObsrService();
-
-        StoredObject root = obsr.getRoot();
-        mRootItem = new ObjectNode("ROOT", root);
-        mTreeView.setRoot(mRootItem);
-
-        obsr = services.getObsrService();
-        obsr.getRoot().addListener((event)-> updatePath(event.getPath()));
+        service.serviceProperty().addListener((obs, o, n)-> {
+            refreshService(n);
+        });
 
         setLeft(mTreeView);
     }
@@ -63,6 +58,14 @@ public class ObsrView extends AbstractView {
     @Override
     public void close() {
 
+    }
+
+    private synchronized void refreshService(ObjectStorage obsr) {
+        StoredObject root = obsr.getRoot();
+        mRootItem = new ObjectNode("ROOT", root);
+        mTreeView.setRoot(mRootItem);
+
+        obsr.getRoot().addListener((event)-> updatePath(event.getPath()));
     }
 
     private void updatePath(String path) {

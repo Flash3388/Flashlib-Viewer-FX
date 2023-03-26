@@ -11,6 +11,7 @@ import com.flash3388.flashlib.util.unique.InstanceIdGenerator;
 import com.flash3388.flashlib.viewerfx.gui.ApplicationGui;
 import com.flash3388.flashlib.viewerfx.gui.Dialogs;
 import com.flash3388.flashlib.viewerfx.gui.MainWindow;
+import com.flash3388.flashlib.viewerfx.services.FlashLibServices;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
