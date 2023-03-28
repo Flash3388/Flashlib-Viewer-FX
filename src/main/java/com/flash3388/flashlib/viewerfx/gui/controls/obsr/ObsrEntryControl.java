@@ -1,9 +1,10 @@
-package com.flash3388.flashlib.viewerfx.gui.controls;
+package com.flash3388.flashlib.viewerfx.gui.controls.obsr;
 
 import com.beans.observables.RegisteredListener;
 import com.flash3388.flashlib.net.obsr.StoredEntry;
 import com.flash3388.flashlib.net.obsr.Value;
 import com.flash3388.flashlib.net.obsr.ValueType;
+import com.flash3388.flashlib.viewerfx.gui.controls.NumericField;
 import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;

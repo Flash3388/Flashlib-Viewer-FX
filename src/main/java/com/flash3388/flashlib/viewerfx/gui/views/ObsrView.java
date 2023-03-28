@@ -1,55 +1,63 @@
 package com.flash3388.flashlib.viewerfx.gui.views;
 
+import com.beans.observables.RegisteredListener;
 import com.flash3388.flashlib.net.obsr.ObjectStorage;
-import com.flash3388.flashlib.net.obsr.StoragePath;
-import com.flash3388.flashlib.net.obsr.StoredEntry;
 import com.flash3388.flashlib.net.obsr.StoredObject;
-import com.flash3388.flashlib.viewerfx.gui.controls.ObsrEntryControl;
+import com.flash3388.flashlib.viewerfx.gui.controls.obsr.EntryNode;
+import com.flash3388.flashlib.viewerfx.gui.controls.obsr.NodeBase;
+import com.flash3388.flashlib.viewerfx.gui.controls.obsr.ObjectNode;
+import com.flash3388.flashlib.viewerfx.gui.controls.obsr.ObsrEntryControl;
+import com.flash3388.flashlib.viewerfx.gui.controls.obsr.ObsrObjectView;
 import com.flash3388.flashlib.viewerfx.services.obsr.ObsrService;
 import javafx.application.Platform;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TreeItem;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 
 public class ObsrView extends AbstractView {
 
     private final TreeView<NodeBase> mTreeView;
     private ObjectNode mRootItem;
 
+    private ObsrObjectView mObjectView;
     private ObsrEntryControl mEntryControl;
+    private RegisteredListener mListener;
 
     public ObsrView(ObsrService service) {
+        Pane dataPane = new VBox();
+
         mTreeView = new TreeView<>();
         mTreeView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         mTreeView.setEditable(false);
         mTreeView.getSelectionModel().selectedItemProperty().addListener((obs, o, n)-> {
-            if (mEntryControl != null) {
-                mEntryControl.close();
-            }
-            if (n instanceof ObjectNode) {
-                setCenter(null);
-                return;
-            }
+            dataPane.getChildren().clear();
 
-            EntryNode entryNode = ((EntryNode)n);
-            mEntryControl = new ObsrEntryControl(entryNode.getName(), entryNode.getEntry());
-            setCenter(mEntryControl);
+            close();
+
+            if (n instanceof ObjectNode) {
+                ObjectNode node = (ObjectNode) n;
+                mObjectView = new ObsrObjectView(node);
+                dataPane.getChildren().add(mObjectView);
+            } else {
+                EntryNode entryNode = (EntryNode) n;
+                mEntryControl = new ObsrEntryControl(entryNode.getName(), entryNode.getEntry());
+                dataPane.getChildren().add(mEntryControl);
+            }
         });
+
+
+        SplitPane mainPane = new SplitPane();
+        setCenter(mainPane);
+        mainPane.getItems().addAll(mTreeView, dataPane);
 
         service.serviceProperty().addListener((obs, o, n)-> {
             refreshService(n);
         });
-
-        setLeft(mTreeView);
     }
 
     public void updateView() {
-        mRootItem.updateChildren();
-
         if (mEntryControl != null) {
             mEntryControl.updateValue();
         }
@@ -57,140 +65,31 @@ public class ObsrView extends AbstractView {
 
     @Override
     public void close() {
-
+        if (mObjectView != null) {
+            mObjectView.close();
+            mObjectView = null;
+        }
+        if (mEntryControl != null) {
+            mEntryControl.close();
+            mEntryControl = null;
+        }
+        if (mListener != null) {
+            mListener.remove();
+            mListener = null;
+        }
     }
 
     private synchronized void refreshService(ObjectStorage obsr) {
+        close();
+
         StoredObject root = obsr.getRoot();
-        mRootItem = new ObjectNode("ROOT", root);
+        mRootItem = new ObjectNode("ROOT", root, null, "/");
         mTreeView.setRoot(mRootItem);
 
-        obsr.getRoot().addListener((event)-> updatePath(event.getPath()));
-    }
-
-    private void updatePath(String path) {
-        Platform.runLater(()-> {
-            StoragePath storagePath = StoragePath.create(path);
-            ObjectNode parentNode = mRootItem;
-
-            for (Iterator<String> it = storagePath.iterator(); it.hasNext();) {
-                String name = it.next();
-
-                if (it.hasNext()) {
-                    // object name
-                    ObjectNode node = parentNode.getChildByName(name);
-                    if (node == null) {
-                        node = parentNode.loadChild(name);
-                    }
-
-                    parentNode = node;
-                } else {
-                    // entry name
-                    parentNode.loadEntry(name);
-                }
-            }
+        mListener = root.addListener((event)-> {
+            Platform.runLater(()-> {
+                mRootItem.handleChangeEvent(event);
+            });
         });
-    }
-
-    private static class NodeBase extends TreeItem<NodeBase> {
-
-    }
-
-    private static class ObjectNode extends NodeBase {
-
-        private final String mName;
-        private final StoredObject mObject;
-        private final Map<String, EntryNode> mEntries;
-        private final Map<String, ObjectNode> mChildren;
-
-        public ObjectNode(String name, StoredObject object) {
-            mName = name;
-            mObject = object;
-            mEntries = new HashMap<>();
-            mChildren = new HashMap<>();
-
-            setValue(this);
-            setExpanded(true);
-        }
-
-        public ObjectNode getChildByName(String name) {
-            return mChildren.get(name);
-        }
-
-        public EntryNode getEntryByName(String name) {
-            return mEntries.get(name);
-        }
-
-        public ObjectNode loadChild(String name) {
-            if (mChildren.containsKey(name)) {
-                return mChildren.get(name);
-            }
-
-            StoredObject object = mObject.getChild(name);
-            ObjectNode node = new ObjectNode(name, object);
-            getChildren().add(node);
-            mChildren.put(name, node);
-
-            return node;
-        }
-
-        public EntryNode loadEntry(String name) {
-            if (mEntries.containsKey(name)) {
-                return mEntries.get(name);
-            }
-
-            StoredEntry entry = mObject.getEntry(name);
-            EntryNode node = new EntryNode(name, entry);
-            getChildren().add(node);
-            mEntries.put(name, node);
-
-            return node;
-        }
-
-        public void updateChildren() {
-            for (EntryNode entry : mEntries.values()) {
-                entry.updateValue();
-            }
-
-            for (ObjectNode child : mChildren.values()) {
-                child.updateChildren();
-            }
-        }
-
-        @Override
-        public String toString() {
-            return mName;
-        }
-    }
-
-    private static class EntryNode extends NodeBase {
-        private final String mName;
-        private final StoredEntry mEntry;
-
-        public EntryNode(String name, StoredEntry entry) {
-            mName = name;
-            mEntry = entry;
-
-            setValue(this);
-            setExpanded(true);
-        }
-
-        public String getName() {
-            return mName;
-        }
-
-        public StoredEntry getEntry() {
-            return mEntry;
-        }
-
-        public void updateValue() {
-            setValue(null);
-            setValue(this);
-        }
-
-        @Override
-        public String toString() {
-            return String.format("%s = %s", mName, mEntry.getValue());
-        }
     }
 }
