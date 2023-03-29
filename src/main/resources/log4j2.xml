@@ -8,10 +8,10 @@
         <Logger name="FlashLib" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="FlashLib.Comm.HFCSService" level="info" additivity="false">
+        <Logger name="FlashLib.Comm.HFCSService" level="debug" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="FlashLib.Comm.OBSRNode" level="debug" additivity="false">
+        <Logger name="FlashLib.Comm.OBSRNode" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
         <Root level="error">

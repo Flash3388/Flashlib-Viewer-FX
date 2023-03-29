@@ -1,8 +1,5 @@
 package com.flash3388.flashlib.viewerfx.services.obsr;
 
-import com.flash3388.flashlib.viewerfx.services.hfcs.HfcsSingleTargetConfig;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 

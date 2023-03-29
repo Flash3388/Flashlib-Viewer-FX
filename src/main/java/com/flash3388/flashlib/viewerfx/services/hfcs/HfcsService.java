@@ -3,14 +3,13 @@ package com.flash3388.flashlib.viewerfx.services.hfcs;
 import com.castle.exceptions.ServiceException;
 import com.flash3388.flashlib.net.hfcs.HfcsRegistry;
 import com.flash3388.flashlib.net.hfcs.impl.HfcsServiceBase;
-import com.flash3388.flashlib.net.hfcs.impl.HfcsTightService;
+import com.flash3388.flashlib.net.hfcs.impl.HfcsUnicastService;
 import com.flash3388.flashlib.time.Clock;
 import com.flash3388.flashlib.util.unique.InstanceId;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.net.InetSocketAddress;
-import java.util.Collections;
 
 public class HfcsService {
 
@@ -46,14 +45,14 @@ public class HfcsService {
     }
 
     public synchronized void switchSettingsToSingleTarget(HfcsSingleTargetConfig config) {
-        HfcsServiceBase service = new HfcsTightService(
-                Collections.singleton(new InetSocketAddress(
-                        config.getTargetAddress(),
-                        config.getTargetPort()
-                )),
+        HfcsServiceBase service = new HfcsUnicastService(
                 mInstanceId,
                 mClock,
-                config.getBindPort());
+                config.getBindPort(),
+                new InetSocketAddress(
+                        config.getTargetAddress(),
+                        config.getTargetPort()
+                ));
 
         switchSettings(service);
         mSetConfig = config;
