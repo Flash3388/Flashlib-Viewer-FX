@@ -79,15 +79,12 @@ public class RobotControlView extends AbstractView {
     }
 
     private synchronized void refreshService(HfcsRegistry registry) {
+        mNodes.clear();
+        mInstancesList.getItems().clear();
+
         mHfcsRegistry = registry;
         HfcsRobotState.registerReceiver(registry, this::updateInstanceRobotState);
         HfcsPing.registerSender(registry, mClock, PING_INTERVAL);
-
-        for (Map.Entry<InstanceId, InstanceNode> entry : mNodes.entrySet()) {
-            Property<RobotControlData> controlDataProperty =
-                    HfcsRobotControl.registerProvider(registry, CONTROL_INTERVAL, entry.getKey());
-            entry.getValue().refresh(controlDataProperty);
-        }
     }
 
     private void updateInstanceRobotState(InstanceId instanceId, RobotStateData robotStateData) {
@@ -106,7 +103,7 @@ public class RobotControlView extends AbstractView {
     private InstanceNode createNewInstance(InstanceId instanceId) {
         Property<RobotControlData> controlDataProperty =
                 HfcsRobotControl.registerProvider(mHfcsRegistry, CONTROL_INTERVAL, instanceId);
-        InstanceNode node = new InstanceNode(instanceId, controlDataProperty);
+        InstanceNode node = new InstanceNode(instanceId, mClock, controlDataProperty);
         mNodes.put(instanceId, node);
         mInstancesList.getItems().add(instanceId);
 
@@ -124,11 +121,13 @@ public class RobotControlView extends AbstractView {
         private final RobotStatusView mStatusView;
         private final RobotControlOpView mControlOpView;
 
-        public InstanceNode(InstanceId instanceId, Property<RobotControlData> controlDataProperty) {
+        public InstanceNode(InstanceId instanceId,
+                            Clock clock,
+                            Property<RobotControlData> controlDataProperty) {
             mStatusView = new RobotStatusView(instanceId);
             setTop(mStatusView);
 
-            mControlOpView = new RobotControlOpView(controlDataProperty);
+            mControlOpView = new RobotControlOpView(controlDataProperty, clock);
             setCenter(mControlOpView);
         }
 
@@ -140,10 +139,6 @@ public class RobotControlView extends AbstractView {
         public void updateRobotState(RobotStateData data, Time now) {
             mStatusView.updateRobotState(data, now);
             mControlOpView.updateRobotState(data, now);
-        }
-
-        public void refresh(Property<RobotControlData> controlDataProperty) {
-
         }
     }
 }
