@@ -3,7 +3,7 @@ package com.flash3388.flashlib.viewerfx.services.hfcs;
 import com.castle.exceptions.ServiceException;
 import com.flash3388.flashlib.net.hfcs.HfcsRegistry;
 import com.flash3388.flashlib.net.hfcs.impl.HfcsServiceBase;
-import com.flash3388.flashlib.net.hfcs.impl.HfcsUnicastService;
+import com.flash3388.flashlib.net.hfcs.impl.HfcsServices;
 import com.flash3388.flashlib.time.Clock;
 import com.flash3388.flashlib.util.unique.InstanceId;
 import javafx.beans.property.Property;
@@ -45,7 +45,7 @@ public class HfcsService {
     }
 
     public synchronized void switchSettingsToSingleTarget(HfcsSingleTargetConfig config) {
-        HfcsServiceBase service = new HfcsUnicastService(
+        HfcsServiceBase service = HfcsServices.unicast(
                 mInstanceId,
                 mClock,
                 config.getBindPort(),

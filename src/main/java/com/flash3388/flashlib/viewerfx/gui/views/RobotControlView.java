@@ -16,6 +16,9 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -38,7 +41,8 @@ public class RobotControlView extends AbstractView {
 
     private final Clock mClock;
     private final Map<InstanceId, InstanceNode> mNodes;
-    private final Pane mRoot;
+    private final Pane mNodeDisplayRoot;
+    private final ListView<InstanceId> mInstancesList;
 
     private HfcsRegistry mHfcsRegistry;
 
@@ -51,13 +55,22 @@ public class RobotControlView extends AbstractView {
 
         mNodes = new HashMap<>();
 
+        mInstancesList = new ListView<>();
+        mInstancesList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        mInstancesList.setEditable(false);
+        mInstancesList.getSelectionModel().selectedItemProperty().addListener((obs, o, n)-> {
+            replaceDisplayedNode(n);
+        });
+
         VBox root = new VBox();
         root.setSpacing(5);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(5));
-        mRoot = root;
+        mNodeDisplayRoot = root;
 
-        setCenter(mRoot);
+        SplitPane splitPane = new SplitPane();
+        splitPane.getItems().addAll(mInstancesList, mNodeDisplayRoot);
+        setCenter(splitPane);
     }
 
     @Override
@@ -101,13 +114,19 @@ public class RobotControlView extends AbstractView {
     private InstanceNode createNewInstance(InstanceId instanceId) {
         InstanceNode node = new InstanceNode(instanceId);
         mNodes.put(instanceId, node);
-        mRoot.getChildren().add(node);
+        mInstancesList.getItems().add(instanceId);
 
         Property<RobotControlData> controlDataProperty =
                 HfcsRobotControl.registerProvider(mHfcsRegistry, CONTROL_INTERVAL, instanceId);
         node.setControlDataProperty(controlDataProperty);
 
         return node;
+    }
+
+    private void replaceDisplayedNode(InstanceId instanceId) {
+        InstanceNode node = mNodes.get(instanceId);
+        mNodeDisplayRoot.getChildren().clear();
+        mNodeDisplayRoot.getChildren().add(node);
     }
 
     private static class InstanceNode extends AnchorPane {
