@@ -14,6 +14,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ObsrEntryControl extends BorderPane {
@@ -80,6 +81,12 @@ public class ObsrEntryControl extends BorderPane {
         close();
 
         switch (type) {
+            case BOOLEAN_ARRAY:
+            case INT_ARRAY:
+            case DOUBLE_ARRAY:
+            case STRING_ARRAY:
+                mCurrentValueDisplay = new ArrayValueDisplay(mEntry, type);
+                break;
             case STRING: {
                 mCurrentValueDisplay = new StringValueDisplay(mEntry);
                 break;
@@ -123,6 +130,18 @@ public class ObsrEntryControl extends BorderPane {
         mEntry.clearValue();
 
         switch (type) {
+            case BOOLEAN_ARRAY:
+                mEntry.setBooleanArray(new boolean[0]);
+                break;
+            case INT_ARRAY:
+                mEntry.setIntArray(new int[0]);
+                break;
+            case DOUBLE_ARRAY:
+                mEntry.setDoubleArray(new double[0]);
+                break;
+            case STRING_ARRAY:
+                mEntry.setStringArray(new String[0]);
+                break;
             case STRING:
                 mEntry.setString("");
                 break;
@@ -289,6 +308,7 @@ public class ObsrEntryControl extends BorderPane {
             super(entry, ValueType.RAW);
 
             mField = new TextField();
+            mField.setEditable(false);
             mField.setText(bytesToHex(entry.getRaw(null)));
             getChildren().add(mField);
         }
@@ -321,6 +341,42 @@ public class ObsrEntryControl extends BorderPane {
         @Override
         public void setValueFromEntry(Value value) {
 
+        }
+    }
+
+    private static class ArrayValueDisplay extends ValueDisplay {
+
+        private final ValueType mValueType;
+        private final TextField mField;
+
+        private ArrayValueDisplay(StoredEntry entry, ValueType valueType) {
+            super(entry, valueType);
+
+            mValueType = valueType;
+
+            mField = new TextField();
+            mField.setEditable(false);
+            getChildren().add(mField);
+
+            setValueFromEntry(entry.getValue());
+        }
+
+        @Override
+        public void setValueFromEntry(Value value) {
+            switch (mValueType) {
+                case BOOLEAN_ARRAY:
+                    mField.setText(Arrays.toString(value.getBooleanArray(null)));
+                    break;
+                case INT_ARRAY:
+                    mField.setText(Arrays.toString(value.getIntArray(null)));
+                    break;
+                case DOUBLE_ARRAY:
+                    mField.setText(Arrays.toString(value.getDoubleArray(null)));
+                    break;
+                case STRING_ARRAY:
+                    mField.setText(Arrays.toString(value.getStringArray(null)));
+                    break;
+            }
         }
     }
 }
