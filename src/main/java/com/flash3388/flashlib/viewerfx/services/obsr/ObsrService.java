@@ -44,8 +44,8 @@ public class ObsrService {
     public synchronized void switchSettingsToSecondaryNode(ObsrSecondaryNodeConfig config) {
         ObsrSecondaryNodeService service = new ObsrSecondaryNodeService(
                 mInstanceId,
-                config.getTargetAddress(),
-                mClock);
+                mClock,
+                config.getTargetAddress());
 
         switchSettings(service);
         mSetConfig = config;

@@ -29,7 +29,7 @@ import java.util.Map;
 public class RobotControlView extends AbstractView {
 
     private static final Time PING_INTERVAL = Time.seconds(5);
-    private static final Time CONTROL_INTERVAL = Time.seconds(1);
+    private static final Time CONTROL_INTERVAL = Time.milliseconds(200);
 
     private final Clock mClock;
     private final Map<InstanceId, InstanceNode> mNodes;

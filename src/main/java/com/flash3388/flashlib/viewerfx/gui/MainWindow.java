@@ -1,12 +1,16 @@
 package com.flash3388.flashlib.viewerfx.gui;
 
 import com.castle.exceptions.ServiceException;
+import com.castle.util.closeables.Closeables;
 import com.flash3388.flashlib.viewerfx.gui.views.ConfigView;
+import com.flash3388.flashlib.viewerfx.gui.views.NtSchedulerView;
+import com.flash3388.flashlib.viewerfx.gui.views.StreamView;
 import com.flash3388.flashlib.viewerfx.services.FlashLibServices;
 import com.flash3388.flashlib.viewerfx.gui.views.AbstractView;
 import com.flash3388.flashlib.viewerfx.gui.views.RobotControlView;
 import com.flash3388.flashlib.viewerfx.gui.views.JoystickView;
 import com.flash3388.flashlib.viewerfx.gui.views.ObsrView;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import javafx.application.Platform;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
@@ -17,7 +21,7 @@ import javafx.stage.Stage;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class MainWindow implements AutoCloseable {
+public class MainWindow extends AbstractView {
 
     private final double mWidth;
     private final double mHeight;
@@ -29,6 +33,8 @@ public class MainWindow implements AutoCloseable {
     private final RobotControlView mRobotControlView;
     private final JoystickView mJoystickView;
     private final ConfigView mConfigView;
+    private final StreamView mStreamView;
+    private final NtSchedulerView mNtSchedulerView;
 
     private final AtomicReference<AbstractView> mSelectedView;
 
@@ -42,6 +48,8 @@ public class MainWindow implements AutoCloseable {
         mRobotControlView = new RobotControlView(services.getHfcsService(), services.getClock());
         mJoystickView = new JoystickView(services.getHfcsService());
         mConfigView = new ConfigView(services);
+        mStreamView = new StreamView();
+        mNtSchedulerView = new NtSchedulerView(services.getNtInstance());
 
         mSelectedView = new AtomicReference<>();
     }
@@ -63,8 +71,16 @@ public class MainWindow implements AutoCloseable {
         configTab.setContent(mConfigView);
         configTab.setClosable(false);
 
+        Tab streamTab = new Tab("Streams");
+        streamTab.setContent(mStreamView);
+        streamTab.setClosable(false);
+
+        Tab ntSchedulerView = new Tab("NT Scheduler");
+        ntSchedulerView.setContent(mNtSchedulerView);
+        ntSchedulerView.setClosable(false);
+
         TabPane tabPane = new TabPane();
-        tabPane.getTabs().addAll(obsrTab, instancesTab, joysticksTab, configTab);
+        tabPane.getTabs().addAll(obsrTab, instancesTab, joysticksTab, configTab, streamTab, ntSchedulerView);
         tabPane.setSide(Side.LEFT);
         tabPane.getSelectionModel().selectedItemProperty().addListener((obs, o, n)-> {
             mSelectedView.set((AbstractView) n.getContent());
@@ -85,7 +101,8 @@ public class MainWindow implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        mJoystickView.close();
+    public void close() {
+        Closeables.silentClose(mJoystickView);
+        Closeables.silentClose(mStreamView);
     }
 }

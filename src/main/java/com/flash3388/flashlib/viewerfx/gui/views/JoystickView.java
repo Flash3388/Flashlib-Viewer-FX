@@ -2,11 +2,11 @@ package com.flash3388.flashlib.viewerfx.gui.views;
 
 import com.castle.concurrent.service.TerminalService;
 import com.castle.exceptions.ServiceException;
+import com.flash3388.flashlib.hid.data.HidData;
+import com.flash3388.flashlib.hid.data.RawHidData;
 import com.flash3388.flashlib.hid.sdl2.hfcs.Sdl2HfcsHid;
 import com.flash3388.flashlib.net.hfcs.HfcsRegistry;
 import com.flash3388.flashlib.robot.hfcs.hid.HfcsHid;
-import com.flash3388.flashlib.robot.hfcs.hid.HidData;
-import com.flash3388.flashlib.robot.hfcs.hid.RawHidData;
 import com.flash3388.flashlib.time.Time;
 import com.flash3388.flashlib.viewerfx.gui.controls.AxisIndicator;
 import com.flash3388.flashlib.viewerfx.gui.controls.BooleanIndicator;

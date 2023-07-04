@@ -4,17 +4,23 @@ import com.flash3388.flashlib.time.Clock;
 import com.flash3388.flashlib.util.unique.InstanceId;
 import com.flash3388.flashlib.viewerfx.services.hfcs.HfcsService;
 import com.flash3388.flashlib.viewerfx.services.obsr.ObsrService;
+import edu.wpi.first.networktables.NetworkTableInstance;
 
 public class FlashLibServices {
 
     private final Clock mClock;
     private final HfcsService mHfcsService;
     private final ObsrService mObsrService;
+    private final NetworkTableInstance mNtInstance;
 
     public FlashLibServices(InstanceId instanceId, Clock clock) {
         mClock = clock;
         mHfcsService = new HfcsService(instanceId, clock);
         mObsrService = new ObsrService(instanceId, clock);
+        mNtInstance = NetworkTableInstance.getDefault();
+
+        mNtInstance.setServer("localhost");
+        mNtInstance.startClient();
     }
 
     public Clock getClock() {
@@ -27,6 +33,10 @@ public class FlashLibServices {
 
     public ObsrService getObsrService() {
         return mObsrService;
+    }
+
+    public NetworkTableInstance getNtInstance() {
+        return mNtInstance;
     }
 
     public void startAll() {

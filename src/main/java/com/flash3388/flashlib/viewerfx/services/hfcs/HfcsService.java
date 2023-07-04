@@ -4,12 +4,16 @@ import com.castle.exceptions.ServiceException;
 import com.flash3388.flashlib.net.hfcs.HfcsRegistry;
 import com.flash3388.flashlib.net.hfcs.impl.HfcsServiceBase;
 import com.flash3388.flashlib.net.hfcs.impl.HfcsServices;
+import com.flash3388.flashlib.net.util.NetInterfaces;
 import com.flash3388.flashlib.time.Clock;
 import com.flash3388.flashlib.util.unique.InstanceId;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 
 public class HfcsService {
 
@@ -45,14 +49,28 @@ public class HfcsService {
     }
 
     public synchronized void switchSettingsToSingleTarget(HfcsSingleTargetConfig config) {
-        HfcsServiceBase service = HfcsServices.unicast(
+        /*HfcsServiceBase service = HfcsServices.unicast(
                 mInstanceId,
                 mClock,
-                config.getBindPort(),
+                new InetSocketAddress(config.getBindPort()),
                 new InetSocketAddress(
                         config.getTargetAddress(),
                         config.getTargetPort()
-                ));
+                ));*/
+
+        HfcsServiceBase service;
+        try {
+            NetworkInterface networkInterface = NetworkInterface.getByName("lo");
+            InetAddress inetAddress = InetAddress.getByName("224.0.0.251");
+            service = HfcsServices.multicast(mInstanceId, mClock,
+                    new InetSocketAddress(5000),
+                    5005,
+                    networkInterface,
+                    inetAddress);
+
+        } catch (Throwable t) {
+            throw new Error(t);
+        }
 
         switchSettings(service);
         mSetConfig = config;
