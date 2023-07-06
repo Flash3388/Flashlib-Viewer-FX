@@ -10,7 +10,6 @@ import com.flash3388.flashlib.viewerfx.gui.views.AbstractView;
 import com.flash3388.flashlib.viewerfx.gui.views.RobotControlView;
 import com.flash3388.flashlib.viewerfx.gui.views.JoystickView;
 import com.flash3388.flashlib.viewerfx.gui.views.ObsrView;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import javafx.application.Platform;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
@@ -49,7 +48,7 @@ public class MainWindow extends AbstractView {
         mJoystickView = new JoystickView(services.getHfcsService());
         mConfigView = new ConfigView(services);
         mStreamView = new StreamView();
-        mNtSchedulerView = new NtSchedulerView(services.getNtInstance());
+        mNtSchedulerView = new NtSchedulerView(services.getNtService());
 
         mSelectedView = new AtomicReference<>();
     }

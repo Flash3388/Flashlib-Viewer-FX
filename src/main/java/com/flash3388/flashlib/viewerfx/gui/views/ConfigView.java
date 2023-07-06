@@ -6,6 +6,8 @@ import com.flash3388.flashlib.viewerfx.gui.controls.propsheet.TargetPortProperty
 import com.flash3388.flashlib.viewerfx.services.FlashLibServices;
 import com.flash3388.flashlib.viewerfx.services.hfcs.HfcsService;
 import com.flash3388.flashlib.viewerfx.services.hfcs.HfcsSingleTargetConfig;
+import com.flash3388.flashlib.viewerfx.services.nt.NtConfig;
+import com.flash3388.flashlib.viewerfx.services.nt.NtService;
 import com.flash3388.flashlib.viewerfx.services.obsr.ObsrSecondaryNodeConfig;
 import com.flash3388.flashlib.viewerfx.services.obsr.ObsrService;
 import javafx.geometry.Insets;
@@ -24,11 +26,16 @@ public class ConfigView extends BorderPane {
     private final ObsrService mObsrService;
     private final ObsrSecondaryNodeConfig mObsrConfig;
 
+    private final NtService mNtService;
+    private final NtConfig mNtConfig;
+
     public ConfigView(FlashLibServices services) {
         mHfcsService = services.getHfcsService();
         mHfcsConfig = new HfcsSingleTargetConfig();
         mObsrService = services.getObsrService();
         mObsrConfig = new ObsrSecondaryNodeConfig();
+        mNtService = services.getNtService();
+        mNtConfig = new NtConfig();
 
         PropertySheet propertySheet = new PropertySheet();
         propertySheet.setMode(PropertySheet.Mode.CATEGORY);
@@ -38,7 +45,9 @@ public class ConfigView extends BorderPane {
                 new TargetAddressPropertyItem(mHfcsConfig.targetAddressProperty(), "HFCS"),
                 new TargetPortPropertyItem(mHfcsConfig.targetPortProperty(), "HFCS"),
 
-                new TargetAddressPropertyItem(mObsrConfig.targetAddressProperty(), "OBSR")
+                new TargetAddressPropertyItem(mObsrConfig.targetAddressProperty(), "OBSR"),
+
+                new TargetAddressPropertyItem(mNtConfig.serverProperty(), "NT")
         );
 
         HBox propertySheetPane = new HBox();
@@ -51,11 +60,13 @@ public class ConfigView extends BorderPane {
         apply.setOnAction((e)-> {
             mHfcsService.switchSettingsToSingleTarget(new HfcsSingleTargetConfig(mHfcsConfig));
             mObsrService.switchSettingsToSecondaryNode(new ObsrSecondaryNodeConfig(mObsrConfig));
+            mNtService.switchSettingsToSecondaryNode(new NtConfig(mNtConfig));
         });
         Button cancel = new Button("Cancel");
         cancel.setOnAction((e)-> {
             mHfcsConfig.copyFrom(mHfcsService.getSetConfig());
             mObsrConfig.copyFrom(mObsrService.getSetConfig());
+            mNtConfig.copyFrom(mNtService.getSetConfig());
         });
         HBox buttonsPane = new HBox();
         buttonsPane.getChildren().addAll(apply, cancel);
