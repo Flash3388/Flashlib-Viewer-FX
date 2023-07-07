@@ -6,6 +6,7 @@ import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.NetworkTableValue;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,7 +18,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -201,6 +205,42 @@ public class NtSchedulerView extends AbstractView {
                 requirementsList.getItems().addAll(requirementsString.split(","));
             }
 
+            TableView<ActionPropertyNode> propertiesView = new TableView<>();
+            TableColumn<ActionPropertyNode, String> keyColumn = new TableColumn<>("Key");
+            keyColumn.setCellValueFactory(new PropertyValueFactory<>("key"));
+            propertiesView.getColumns().add(keyColumn);
+            TableColumn<ActionPropertyNode, String> valueColumn = new TableColumn<>("Value");
+            valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
+            propertiesView.getColumns().add(valueColumn);
+            propertiesView.setPlaceholder(new Label("No Properties"));
+
+            NetworkTable propertiesTable = table.getSubTable("properties");
+            System.out.println(propertiesTable.getKeys());
+            propertiesTable.addEntryListener((table1, key, entry, value, flags)-> {
+                Platform.runLater(()-> {
+                    for (ActionPropertyNode node : propertiesView.getItems()) {
+                        if (node.getKey().equals(key)) {
+                            node.setValue(value);
+                            propertiesView.refresh();
+                            return;
+                        }
+                    }
+
+                    // not found
+                    ActionPropertyNode node = new ActionPropertyNode(key, null);
+                    node.setValue(value);
+                    propertiesView.getItems().add(node);
+                });
+            }, EntryListenerFlags.kUpdate | EntryListenerFlags.kNew | EntryListenerFlags.kImmediate);
+
+            VBox rightPane = new VBox();
+            rightPane.setAlignment(Pos.TOP_RIGHT);
+            rightPane.setPadding(new Insets(5));
+            rightPane.setSpacing(5);
+            rightPane.setPrefSize(250, 150);
+            rightPane.getChildren().addAll(propertiesView);
+            setRight(rightPane);
+
             VBox leftPane = new VBox();
             leftPane.setAlignment(Pos.TOP_LEFT);
             leftPane.setPadding(new Insets(5));
@@ -238,6 +278,8 @@ public class NtSchedulerView extends AbstractView {
             HBox childrenPane = new HBox();
             childrenPane.setPadding(new Insets(10));
             int childrenTableListener = table.addSubTableListener((parent, subName, subTable)-> {
+                if (subName.equals("properties")) return;
+
                 ActionNode node = new ActionNode(subTable);
                 mCloser.add(node);
 
@@ -281,6 +323,34 @@ public class NtSchedulerView extends AbstractView {
             try {
                 mCloser.close();
             } catch (Exception e) {}
+        }
+    }
+
+    public static class ActionPropertyNode {
+
+        private final String mKey;
+        private String mValue;
+
+        private ActionPropertyNode(String key, String value) {
+            mKey = key;
+            mValue = value;
+        }
+
+
+        public String getKey() {
+            return mKey;
+        }
+
+        public String getValue() {
+            return mValue;
+        }
+
+        public void setValue(String value) {
+            mValue = value;
+        }
+
+        public void setValue(NetworkTableValue value) {
+            setValue(value.getValue().toString());
         }
     }
 }
